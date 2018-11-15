@@ -28,7 +28,9 @@ class CouchbaseService {
 			this.bucket.bucketName = bucketName;
 			this.bucket.atomicCounter = options.atomicCounter;
 
-			return onConnectCallback();
+			if (typeof onConnectCallback === 'function') {
+				return onConnectCallback();
+			}
 		});
 
 		this.reconnectOptions = Object.assign({
@@ -37,7 +39,7 @@ class CouchbaseService {
 			minTimeout: 1000,
 			maxTimeout: 2000,
 			randomize: false
-		}, options.reconnect || {});
+		}, options.reconnect);
 
 		return this;
 	}
@@ -132,10 +134,11 @@ class CouchbaseService {
 
 	/**
 	 * Run a Couchbase query
-	 * @function queryCallback
-	 * @param {string} qry
+	 * @function viewQueryCallback
+	 * @param {object} options
 	 */
-	queryCallback(qry, callback) { //callback: (error, result, meta)
+	viewQueryCallback(options, callback) { // callback: (error, result, meta)
+		return this.bucket.query(this.prepareViewQuery(options));
 	}
 
 	/**
@@ -158,6 +161,13 @@ class CouchbaseService {
 	 * @param {object} key
 	 */
 	getPromise(key) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'get',
+				[key],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -167,7 +177,13 @@ class CouchbaseService {
 	 * @param {string} lockTime
 	 */
 	getAndLockPromise(key, lockTime) {
-
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'getAndLock',
+				[key, { lockTime }],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -176,6 +192,13 @@ class CouchbaseService {
 	 * @param {string} keys
 	 */
 	getMultiPromise(keys) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'getMutli',
+				[keys],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -233,14 +256,13 @@ class CouchbaseService {
 	unlockPromise(key, cas) {
 	}
 
-
-
 	/**
 	 * Runs a Couchbase query based on submitted query parameters
-	 * @function queryPromise
+	 * @function viewQueryPromise
 	 * @param {string} qry
 	 */
-	queryPromise(qry) { //callback: (error, result, meta)
+	viewQueryPromise(qry) {
+		
 	}
 
 	/**
@@ -324,6 +346,10 @@ class CouchbaseService {
 			return callback(e);
 		}
 	}
+
+	prepareViewQuery(options) {
+		const query = couchbase.ViewQuery;
+	}
 }
 
 /**
@@ -331,8 +357,4 @@ class CouchbaseService {
  * ----------------------------------------------------------------------
  */
 
-module.exports = {
-	CouchbaseService,
-	ViewQuery: couchbase.ViewQuery,
-	N1qlQuery: couchbase.N1qlQuery
-};
+module.exports = CouchbaseService;
