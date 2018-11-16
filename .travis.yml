@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+  - "8"
+deploy:
+  provider: npm
+  email: mark@compknowhow.com
+  api_key: $NPM_AUTH_TOKEN
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+notifications:
+  email:
+    recipients:
+    - mark@compknowhow.com
+    on_success: change
+    on_failure: always
