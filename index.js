@@ -6,31 +6,34 @@
 const couchbase = require('couchbase');
 const retry = require('retry');
 
+const operationTimeout = 10000;
+
 /**
  * COUCHBASE SERVICE CLASS
  * ----------------------------------------------------------------------
  */
 
 class CouchbaseService {
-	constructor (bucketName, options, onConnectCallback) {
-		const cluster = new couchbase.Cluster(options.cluster);
+	constructor (bucketName, options) {
+		this.cluster = new couchbase.Cluster(options.cluster);
 
 		// If auth options are present, authenticate the cluster
 		if (options.auth) {
-			cluster.authenticate(options.auth.username, options.auth.password);
+			this.cluster.authenticate(options.auth.username, options.auth.password);
 		}
 
+		this.options = options;
 		this.bucketName = bucketName;
-		this.bucket = cluster.openBucket(bucketName, error => {
-			if (error) throw error;
+		this.bucket = this.cluster.openBucket(bucketName, error => {
+			if (typeof options.onConnectCallback === 'function') {
+				options.onConnectCallback(error);
+			} else if (error) throw error;
 
 			this.bucket.operationTimeout = 10000;
 			this.bucket.bucketName = bucketName;
 			this.bucket.atomicCounter = options.atomicCounter;
 
-			if (typeof onConnectCallback === 'function') {
-				return onConnectCallback();
-			}
+
 		});
 
 		this.reconnectOptions = Object.assign({
@@ -82,6 +85,7 @@ class CouchbaseService {
 	 * @function getCounterCallback
 	 */
 	getCounterCallback(callback) { // callback: (error, result)
+		return this.bucketCall('counter', [this.bucket.atomicCounter], callback);
 	}
 
 	/**
@@ -92,6 +96,7 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	insertCallback(key, value, options, callback) { // callback: (error, result)
+		return this.bucketCall('insert', [key, value, options], callback);
 	}
 
 	/**
@@ -102,6 +107,7 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	upsertCallback(key, value, options, callback) { // callback: (error, result)
+		return this.bucketCall('upsert', [key, value, options], callback);
 	}
 
 	/**
@@ -111,6 +117,7 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	removeCallback(key, options, callback) { // callback: (error, result)
+		return this.bucketCall('remove', [key, options], callback);
 	}
 
 	/**
@@ -121,6 +128,7 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	touchCallback(key, expiry, options, callback) { // callback: (error, result)
+		return this.bucketCall('touch', [key, expiry, options], callback);
 	}
 
 	/**
@@ -130,6 +138,7 @@ class CouchbaseService {
 	 * @param {object} cas
 	 */
 	unlockCallback(key, cas, callback) { // callback: (error, result)
+		return this.bucketCall('unlock', [key, cas], callback);
 	}
 
 	/**
@@ -140,7 +149,7 @@ class CouchbaseService {
 	 * @param {object} options - View query options
 	 */
 	viewQueryCallback(ddoc, name, options, callback) { // callback: (error, result, meta)
-		return this.bucket.query(this.prepareViewQuery(ddoc, name, options), callback);
+		return this.bucketCall('query', [this.prepareViewQuery(ddoc, name, options)], callback);
 	}
 
 	/**
@@ -158,7 +167,14 @@ class CouchbaseService {
 	 * @param {string} name
 	 * @param {object} data
 	 */
-	upsertDesignDocumentCallback(name, data, callback) {
+	upsertDesignDocumentCallback(name, views, development=false, callback) { // callback: (error)
+		try {
+			const manager = this.bucket.manager(this.options.auth.username, this.options.auth.password);
+
+			manager.upsertDesignDocument(development ? `dev_${name}` : name, { views }, callback);
+		} catch(e) {
+			return callback(e);
+		}
 	}
 
 	/**
@@ -176,7 +192,7 @@ class CouchbaseService {
 			this.bucketCall(
 				'get',
 				[key],
-				(error, result) => error ? reject(error) : reject(result),
+				(error, result) => error ? reject(error) : reject(result)
 			);
 		});
 	}
@@ -192,7 +208,7 @@ class CouchbaseService {
 			this.bucketCall(
 				'getAndLock',
 				[key, { lockTime }],
-				(error, result) => error ? reject(error) : reject(result),
+				(error, result) => error ? reject(error) : reject(result)
 			);
 		});
 	}
@@ -207,7 +223,7 @@ class CouchbaseService {
 			this.bucketCall(
 				'getMutli',
 				[keys],
-				(error, result) => error ? reject(error) : reject(result),
+				(error, result) => error ? reject(error) : reject(result)
 			);
 		});
 	}
@@ -217,6 +233,13 @@ class CouchbaseService {
 	 * @function getCounterPromise
 	 */
 	getCounterPromise() {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'counter',
+				[this.bucket.atomicCounter],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -227,6 +250,13 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	insertPromise(key, value, options) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'insert',
+				[key, value, options],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -237,6 +267,13 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	upsertPromise(key, value, options) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'upsert',
+				[key, value, options],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -246,6 +283,13 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	removePromise(key, options) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'remove',
+				[key, options],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -256,6 +300,13 @@ class CouchbaseService {
 	 * @param {object} options
 	 */
 	touchPromise(key, expiry, options) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'touch',
+				[key, expiry, options],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -265,6 +316,13 @@ class CouchbaseService {
 	 * @param {object} cas
 	 */
 	unlockPromise(key, cas) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'unlock',
+				[key, cas],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -305,7 +363,16 @@ class CouchbaseService {
 	 * @param {string} name
 	 * @param {object} data
 	 */
-	upsertDesignDocumentPromise(name, data) {
+	upsertDesignDocumentPromise(bucket, name, views, development=true) {
+		return new Promise((resolve, reject) => {
+			const manager = this.bucket.manager(this.options.auth.username, this.options.auth.password);
+
+			manager.upsertDesignDocument(
+				development ? `dev_${name}` : name,
+				{ views },
+				error => error ? reject(error) : resolve(null),
+			);
+		});
 	}
 
 	/**
