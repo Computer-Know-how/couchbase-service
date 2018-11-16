@@ -135,10 +135,21 @@ class CouchbaseService {
 	/**
 	 * Run a Couchbase query
 	 * @function viewQueryCallback
-	 * @param {object} options
+	 * @param {string} ddoc - Design document name
+	 * @param {string} name - View name
+	 * @param {object} options - View query options
 	 */
-	viewQueryCallback(options, callback) { // callback: (error, result, meta)
-		return this.bucket.query(this.prepareViewQuery(options));
+	viewQueryCallback(ddoc, name, options, callback) { // callback: (error, result, meta)
+		return this.bucket.query(this.prepareViewQuery(ddoc, name, options), callback);
+	}
+
+	/**
+	 * Run a Couchbase N1QL query
+	 * @function n1qlQueryCallback
+	 * @param {string} qry - Query string to run
+	 */
+	n1qlQueryCallback(qry, callback) { // callback: (error, result, meta)
+		return this.bucketCall('query', [couchbase.N1qlQuery.fromString(qry)], callback);
 	}
 
 	/**
@@ -257,12 +268,35 @@ class CouchbaseService {
 	}
 
 	/**
-	 * Runs a Couchbase query based on submitted query parameters
+	 * Run a Couchbase view query
 	 * @function viewQueryPromise
-	 * @param {string} qry
+	 * @param {string} ddoc - Design document name
+	 * @param {string} name - View name
+	 * @param {object} options - View query options
 	 */
-	viewQueryPromise(qry) {
-		
+	viewQueryPromise(ddoc, name, options) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'query',
+				[this.prepareViewQuery(ddoc, name, options)],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
+	}
+
+	/**
+	 * Run a Couchbase N1QL query
+	 * @function n1qlQueryPromise
+	 * @param {string} qry - Query string to run
+	 */
+	n1qlQueryPromise(qry) {
+		return new Promise((resolve, reject) => {
+			this.bucketCall(
+				'query',
+				[couchbase.N1qlQuery.fromString(qry)],
+				(error, result) => error ? reject(error) : reject(result),
+			);
+		});
 	}
 
 	/**
@@ -347,8 +381,63 @@ class CouchbaseService {
 		}
 	}
 
-	prepareViewQuery(options) {
-		const query = couchbase.ViewQuery;
+	prepareViewQuery(ddoc, name, options) {
+		// Create the base view query
+		const query = ViewQuery.from(ddoc, name);
+
+		// Add view query options
+		// Available options are:
+		// - custom
+		// - group
+		// - group_level
+		// - include_docs
+		// - key
+		// - keys
+		// - limit
+		// - order
+		// - reduce
+		// - skip
+		// - stale
+
+		for (const option of options) {
+			const opt = options[option];
+
+			switch (option) {
+				case 'stale': {
+					const modes = {
+						before: ViewQuery.Update.BEFORE,
+						none: ViewQuery.Update.NONE,
+						after: ViewQuery.Update.AFTER,
+					}
+
+					query.stale(modes[opt]);
+					break;
+				}
+
+				case 'order': {
+					const modes = {
+						ascending: ViewQuery.Order.ASCENDING,
+						descending: ViewQuery.Order.DESCENDING,
+					}
+
+					query.order(modes[opt]);
+					break;
+				}
+
+				case 'id_range':
+					query[option](opt.start, opt.end);
+					break;
+
+				case 'range':
+					query[option](opt.start, opt.end, opt.inclusive_end);
+					break;
+
+				default:
+					query[option](opt);
+			}
+		}
+
+		return query;
 	}
 }
 
