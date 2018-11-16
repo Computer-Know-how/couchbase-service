@@ -12,6 +12,6 @@ deploy:
 notifications:
   email:
     recipients:
-    - mark@compknowhow.com
+      - mark@compknowhow.com
     on_success: change
     on_failure: always
