@@ -165,8 +165,9 @@ class CouchbaseService {
 	/**
 	 * Inserts or updates a design document (view query)
 	 * @function upsertDesignDocumentCallback
-	 * @param {string} name
-	 * @param {object} data
+	 * @param {string} name - Name of the design document
+	 * @param {object} views - Views to add
+	 * @param {boolean} development - If true, install the design document in the dev documents
 	 */
 	upsertDesignDocumentCallback(name, views, development=false, callback) { // callback: (error)
 		try {
