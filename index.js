@@ -8,6 +8,9 @@ const retry = require('retry');
 
 const operationTimeout = 10000;
 
+const ViewQuery = couchbase.ViewQuery;
+const N1qlQuery = couchbase.N1qlQuery;
+
 /**
  * COUCHBASE SERVICE CLASS
  * ----------------------------------------------------------------------
@@ -429,7 +432,7 @@ class CouchbaseService {
 						this.bucket.disconnect();
 					}
 
-					this.bucket = cluster.openBucket(this.bucketName, err => {
+					this.bucket = this.cluster.openBucket(this.bucketName, err => {
 						if (err) {
 							if (operation.retry(err)) {
 								return; // retry until done
@@ -475,7 +478,7 @@ class CouchbaseService {
 						before: ViewQuery.Update.BEFORE,
 						none: ViewQuery.Update.NONE,
 						after: ViewQuery.Update.AFTER,
-					}
+					};
 
 					query.stale(modes[opt]);
 					break;
@@ -485,7 +488,7 @@ class CouchbaseService {
 					const modes = {
 						ascending: ViewQuery.Order.ASCENDING,
 						descending: ViewQuery.Order.DESCENDING,
-					}
+					};
 
 					query.order(modes[opt]);
 					break;
