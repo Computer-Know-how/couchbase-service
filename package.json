@@ -4,7 +4,7 @@
   "description": "Couchbase simplified",
   "main": "lib/index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "./node_modules/mocha/bin/mocha --recursive"
   },
   "repository": {
     "type": "git",
@@ -29,5 +29,10 @@
   "dependencies": {
     "couchbase": "^2.6.1",
     "retry": "^0.12.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "mockery": "^2.1.0"
   }
 }
