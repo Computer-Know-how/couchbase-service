@@ -6,10 +6,7 @@
 const couchbase = require('couchbase');
 const retry = require('retry');
 
-const operationTimeout = 10000;
-
-const ViewQuery = couchbase.ViewQuery;
-const N1qlQuery = couchbase.N1qlQuery;
+const { ViewQuery, N1qlQuery } = couchbase;
 
 /**
  * COUCHBASE SERVICE CLASS
@@ -27,16 +24,17 @@ class CouchbaseService {
 
 		this.options = options;
 		this.bucketName = bucketName;
+
+		// Open the Couchbase bucket
 		this.bucket = this.cluster.openBucket(bucketName, error => {
 			if (typeof options.onConnectCallback === 'function') {
 				options.onConnectCallback(error);
 			} else if (error) throw error;
 
-			this.bucket.operationTimeout = 10000;
+			// Set bucket settings
+			this.bucket.operationTimeout = this.operationTimeout = options.operationTimeout || 10000;
 			this.bucket.bucketName = bucketName;
 			this.bucket.atomicCounter = options.atomicCounter;
-
-
 		});
 
 		this.reconnectOptions = Object.assign({
@@ -161,7 +159,7 @@ class CouchbaseService {
 	 * @param {string} qry - Query string to run
 	 */
 	n1qlQueryCallback(qry, callback) { // callback: (error, result, meta)
-		return this.bucketCall('query', [couchbase.N1qlQuery.fromString(qry)], callback);
+		return this.bucketCall('query', [N1qlQuery.fromString(qry)], callback);
 	}
 
 	/**
@@ -354,7 +352,7 @@ class CouchbaseService {
 		return new Promise((resolve, reject) => {
 			this.bucketCall(
 				'query',
-				[couchbase.N1qlQuery.fromString(qry)],
+				[N1qlQuery.fromString(qry)],
 				(error, result) => error ? reject(error) : reject(result),
 			);
 		});
@@ -394,7 +392,7 @@ class CouchbaseService {
 		try {
 			this.bucket[method](...args, (error, result) => {
 				if (error && [11, 16, 23].includes(error.code)) {
-					this.reconnectBucket(context, error.code, err => {
+					this.reconnectBucket(error.code, err => {
 						return err
 							? callback(err, null)
 							: this.bucketCall(method, args, callback);
@@ -405,7 +403,7 @@ class CouchbaseService {
 			});
 		} catch (e) {
 			if (/shutdown bucket/.exec(e.message)) {
-				this.reconnectBucket(context, 0, err => {
+				this.reconnectBucket(0, err => {
 					return err
 						? callback(err, null)
 						: this.bucketCall(method, args, callback);
@@ -440,7 +438,7 @@ class CouchbaseService {
 								return callback(new Error('connecting to Couchbase failed, aborting operation'));
 							}
 						} else {
-							this.bucket.operationTimeout = operationTimeout;
+							this.bucket.operationTimeout = this.operationTimeout;
 							return callback(null);
 						}
 					});
@@ -453,7 +451,7 @@ class CouchbaseService {
 
 	prepareViewQuery(ddoc, name, options) {
 		// Create the base view query
-		const query = ViewQuery.from(ddoc, name);
+		const query = couchbase.ViewQuery.from(ddoc, name);
 
 		// Add view query options
 		// Available options are:
