@@ -1,0 +1,30 @@
+{
+  "name": "couchbase-service",
+  "version": "1.0.0",
+  "description": "Couchbase simplified",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Computer-Know-how/couchbase-service.git"
+  },
+  "keywords": [
+    "couchbase"
+  ],
+  "author": "Computer Know How, LLC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Computer-Know-how/couchbase-service/issues"
+  },
+  "homepage": "https://github.com/Computer-Know-how/couchbase-service#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "dependencies": {
+    "couchbase": "^2.6.1",
+    "retry": "^0.12.0"
+  }
+}
