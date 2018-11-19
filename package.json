@@ -15,9 +15,6 @@
   ],
   "author": "Computer Know How, LLC",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "bugs": {
     "url": "https://github.com/Computer-Know-how/couchbase-service/issues"
   },
