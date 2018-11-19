@@ -3,7 +3,7 @@ node_js:
   - "8"
 deploy:
   provider: npm
-  email: mark@compknowhow.com
+  email: info@compknowhow.com
   api_key: $NPM_AUTH_TOKEN
   skip_cleanup: true
   on:
@@ -12,6 +12,6 @@ deploy:
 notifications:
   email:
     recipients:
-      - mark@compknowhow.com
+      - info@compknowhow.com
     on_success: change
     on_failure: always
