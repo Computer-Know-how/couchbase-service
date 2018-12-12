@@ -8,7 +8,4 @@ This purpose of this package is to provide a clean interface to the Node.js Couc
 
 ## Publishing a new version
 
-1. Update the npm version: `npm version <type>`
-1. Push commits: `git push`
-1. Tag with the new version: `git tag <version>`
-1. Push tag: `git push origin <version>`
+Use the npm version command to increment the package version and push the code/tags.  The command can be run using `npm version <type>` where type is one of `major`, `minor`, `patch`.  The `postversion` npm script will execute after the version has been updated to push the code and tags to the origin server.
