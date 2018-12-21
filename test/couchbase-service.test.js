@@ -294,3 +294,58 @@ testSuite('removePromise tests', () => {
 		});
 	});
 }); // END removePromise tests
+
+
+testSuite('touchPromise tests', () => {
+	it('touchPromise test', () => {
+		const cb = new couchbaseService('test', cbOptions);
+		cb.touchPromise('test::1', 5).then((result) => {
+			assert.isObject(result);
+			assert.equal(result.cas, 1545240403128025088);
+		}).catch(e => {
+			assert.isNull(e);
+		});
+	});
+}); // END touchPromise tests
+
+testSuite('unlockPromise tests', () => {
+	it('unlockPromise test', () => {
+		const cb = new couchbaseService('test', cbOptions);
+		cb.unlockPromise('test::1', 1545242151479476224).then((result) => {
+			assert.isNull(result);
+		}).catch(e => {
+			assert.isNull(e);
+		});
+	});
+}); // END unlockPromise tests
+
+testSuite('viewQueryPromise tests', () => {
+	it('viewQueryPromise test', () => {
+		const cb = new couchbaseService('test', cbOptions);
+		const ddoc = 'getAllNames';
+		const name = 'getAllNames';
+		const queryOptions = {
+			limit: 10,
+			skip: 0,
+			order: 'descending'
+		};
+		cb.viewQueryPromise(ddoc,name, queryOptions).then((result) => {
+			assert.isArray(result);
+		}).catch(e => {
+			assert.isNull(e);
+		});
+	});
+}); // END viewQueryPromise tests
+
+
+testSuite('n1qlQueryPromise tests', () => {
+	it('n1qlQueryPromise test', () => {
+		const cb = new couchbaseService('test', cbOptions);
+		const n1ql = 'SELECT firstName from test where firstName LIKE Paul';
+		cb.n1qlQueryPromise(n1ql).then((result) => {
+			assert.isArray(result);
+		}).catch(e => {
+			assert.isNull(e);
+		});
+	});
+}); // END n1qlQueryPromise tests
