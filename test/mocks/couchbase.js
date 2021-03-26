@@ -1,112 +1,189 @@
-/*eslint no-console: 0*/
 /*
 	DEPENDENCIES --------------------------------------------------------------------------------
 */
-
-
 /*
 	COUCHBASE DSN MOCK OBJECT -------------------------------------------
 */
-
 function Cluster(ipLocation) {
 	this.ipLocation = ipLocation;
+	this.bucket = (bucketName, callback) => {
+			return {
+				defaultCollection: () => {
+					return {
+						insertCallback: (key, value, options, callback) => {
+							return callback(null, { cas: {}});
+						},
+						upsertCallback: (key, value, options, callback) => {
+							return callback(null, { cas: {}});
+						},
+						getCallback: (key, callback) => {
+							return callback('test::1', {firstName:'Paul', lastName: 'Rice2'});
+						},
+						getAndLockCallback: (key, lockTime, callback) => {
+							return callback(null, {cas: {}, value: {firstName: 'Paul', lastName: 'Rice2' }});
+						},
+						counterCallback: (callback) => {
+							return callback(null, { cas: {}, token: {}, value: 2});
+						},
+						touchCallback: (key, expiry, options, callback) => {
+							return callback(null, { cas: {}});
+						},
+						removeCallback: (key, options, callback) => {
+							return callback(null, { cas: {}});
+						},
+						insertPromise: (key, value, options={}) => {
+							return callback({ cas: {}, token: {}})
+						},
+						upsertPromise: (key, value, options={}) => {
+							return callback({ cas: {}, token: {}})
+						},
+						getPromise: (key) => {
+							return { firstName: 'Paul', lastName: 'Rice' }
+						},
+						getAndLockPromise: (key, timeout) => {
+							return {cas:{},value: { firstName: 'Paul', lastName: 'Rice' }}
+						},
+						getMultiPromise: (key) => {
+							return {
+									error: 0,
+									result: {
+									'test::1': {
+										cas: {},
+										content: { firstName: 'Paul', lastName: 'Rice' }
+									},
+									'test::2': {
+										cas: {},
+										content: { firstName: 'Rice', lastName: 'Paul' }
+									}
+								}
+							}
+						},
+						manager: () => {
+							return {
+								insertDesignDocument: (viewName, dataStruct, callback) => {
+									return callback(null);
+								},
+								upsertDesignDocument: (viewName, dataStruct, callback) => {
+									return callback(null);
+								}
+							} ;
+						},
+						counter: (documentName, delta, options, callback) => {
+							return callback(null, {
+								cas: 1545239775609749504,
+								token: undefined,
+								value: 2
+							});
+						},
+						getMultiCallback: (docIDs, callback) => {
+							return callback(0, {
+								'test::1':{
+									'value': {
+										'doctype': 'enterprise',
+										'firstName': 'Paul'
+									}
+								},
+								'test::2':{
+									'value': {
+										'doctype': 'enterprise',
+										'firstName': 'Paul'
+									}
+								}
+							});
+						},
+						viewQueryPromise: (ddoc, name, options) => {
+							return {
+								meta: { totalRows: 2 },
+								rows: [
+										{ value: null, id: 'test::1', key: 'test::1' },
+										{ value: null, id: 'test::2', key: 'test::2' }
+									]
+								}
+						},
+						viewQueryCallback: (ddoc, name, options, callback) => {
+							return callback(null,{
+								meta: { totalRows: 2 },
+								rows: [
+										{ value: null, id: 'test::1', key: 'test::1' },
+										{ value: null, id: 'test::2', key: 'test::2' }
+									]
+								});
+						},
+						exists: (key) => {
+							return {cas: {}, exists: true}
+						},
+						unlockCallback: (key, cas, callback) => {
+							return callback(null, { cas: {}});
+						},
+						unlockPromise: (key, cas) => {
+							return {cas: {}};
+						},
+						counterPromise: () => {
+							return({cas: {}, token: {},value: 2
+							});
+						},
+						removePromise: (key, options={}) => {
+							return { cas: {}};
+						},
+						touchPromise: (key, options={}) => {
+							return { cas: {}};
+						},
+						n1qlQueryPromise: (qry) => {
+							return [ { firstName: 'Paul' } ];
+						},
+						n1qlQueryCallback: (qry, callback) => {
+							return callback(null, [ { firstName: 'Paul' } ]);
+						},
+						unlock: (docName, cas, callback) => {
+							return callback(null, null);
+						},
+						query: (query, callback) => {//callback: (error, result, meta)
+							let result = [];
+							if(query.ddoc === 'getAllNames') {
+								result = [{
+									key: '2018-12-19T20:43:30.762Z',
+									value: '20887014',
+									id: 'test::1'
+								},
+								{
+									key: '2018-12-19T20:43:30.761Z',
+									value: '20886982',
+									id: 'test::2'
+								}];
+							}
 
-	this.authenticate = (username, password) => {
-		if(!username || !password) {
-			console.error(`Couchbase authentication failed. Credentials submitted, username: ${username}, password: ${password}`);
-		}
-	};
+							return callback(null, result);
+						},
+						binary: () => {
+							return { counter: (documentName, delta, options, callback) => {
+								return callback(null, {
+									cas: 1545239775609749504,
+									token: undefined,
+									value: 2
+								});
+							},
+						}
+						},
+					};
+				},
 
-	this.openBucket = (bucketName, callback) => {
-		return {
-			operationTimeout: 10000,
-			bucketName:bucketName,
-			atomicCounter: 'testAtomicCounter',
-			onReconnectCallback: (error) => {
-				if(error) {
-					throw error;
-				}
-			},
-			connected: true,
-			manager: () => {
-				return {
-					insertDesignDocument: (viewName, dataStruct, callback) => {
-						return callback(null);
-					},
-					upsertDesignDocument: (viewName, dataStruct, callback) => {
-						return callback(null);
-					}
-				} ;
-			},
-			counter: (documentName, delta, options, callback) => {
-				return callback(null, {
-					cas: 1545239775609749504,
-					token: undefined,
-					value: 2
-				});
-			},
-			insert: (documentName, listingData, options, callback) => {
-				return callback(null, { cas: 1545159314161860608});
-			},
-			upsert: (documentName, listingData, options, callback) => {
-				return callback(null, { cas: 1545159314161860608});
-			},
-			remove: (documentName, options, callback) => {
-				return callback(null, null);
-			},
-			touch: (documentName, expiryDate, options, callback) => {
-				return callback(null, { cas: 1545240403128025088 });
-			},
-			get: (documentName, callback) => {
-				if(documentName === 'test::1') {
-					return callback(null, {value: {firstName:'Paul', lastName: 'Rice'}});
-				} else  if(documentName === 'test::2') {
-					return callback(null, {value: {firstName:'Rice', lastName: 'Paul'}});
-				} else {
-					return callback(null, {value: {firstName:'some', lastName: 'error'}});
-				}
-			},
-			getMulti: (docIDs, callback) => {
-				console.log('i do not think we get here');
-				return callback(0, {
-					'test::d1':{
-						'value': {
-							'doctype': 'enterprise'
+
+					operationTimeout: 10000,
+					bucketName:bucketName,
+					atomicCounter: 'testAtomicCounter',
+					onReconnectCallback: (error) => {
+						if(error) {
+							throw error;
 						}
 					},
-					'test::d2':{
-						'value': {
-							'doctype': 'enterprise'
-						}
-					}
-				});
-			},
-			getAndLock: (docID, options, callback) => {
-				return callback(null, { cas: 1545229695764725760, value: { firstName: 'Paul', lastName: 'Rice' } });
-			},
-			unlock: (docName, cas, callback) => {
-				return callback(null, null);
-			},
-			query: (query, callback) => {//callback: (error, result, meta)
-				let result = [];
-				if(query.ddoc === 'getAllNames') {
-					result = [{
-						key: '2018-12-19T20:43:30.762Z',
-						value: '20887014',
-						id: 'test::1'
-					},
-					{
-						key: '2018-12-19T20:43:30.761Z',
-						value: '20886982',
-						id: 'test::2'
-					}];
-				}
+					connected: true,
 
-				return callback(null, result);
 			}
-		};
+		// this.collection =
+
+
 	};
-}
+};
 
 
 /**
@@ -118,6 +195,8 @@ function Cluster(ipLocation) {
 	*		postoptions: {}
 	*	}
 */
+
+
 function ViewQuery() {
 	this.ddoc = null;
 	this.name = null;

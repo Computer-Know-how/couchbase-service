@@ -26,7 +26,7 @@
     "test": "test"
   },
   "dependencies": {
-    "couchbase": "^3.0.0",
+    "couchbase": "git+https://github.com/couchbase/couchnode.git#master",
     "retry": "^0.12.0"
   },
   "devDependencies": {
