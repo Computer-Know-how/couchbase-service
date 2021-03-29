@@ -1,6 +1,6 @@
 {
   "name": "couchbase-service",
-  "version": "4.0.0",
+  "version": "3.0.0",
   "description": "Couchbase simplified",
   "main": "lib/index.js",
   "scripts": {
