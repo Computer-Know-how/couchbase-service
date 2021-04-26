@@ -212,7 +212,6 @@ testSuite('unlockCallback tests', () => {
 			cb.collection.getAndLockCallback('test::1', 15, (error, result) => {
 				const cas = result.cas;
 				cb.collection.unlockCallback('test::1', cas, (error, result) => {
-					console.log(result);
 					assert.isNull(error);
 					assert.isObject(result);
 					assert.isObject(result.cas);
@@ -404,7 +403,7 @@ testSuite('unlockPromise tests', () => {
 			let getCas = await cb.collection.getAndLockPromise('test::1', 15);
 			const cas = getCas.cas
 			let result = await cb.collection.unlockPromise('test::1', cas);
-			console.log(result);
+
 			assert.isObject(result);
 		} catch (e) {
 			console.log(e);
