@@ -32,10 +32,10 @@ function Cluster(ipLocation) {
 							return callback(null, { cas: {}});
 						},
 						insertPromise: (key, value, options={}) => {
-							return callback({ cas: {}, token: {}})
+							return { cas: {}, token: {}};
 						},
 						upsertPromise: (key, value, options={}) => {
-							return callback({ cas: {}, token: {}})
+							return { cas: {}, token: {}};
 						},
 						getPromise: (key) => {
 							return { firstName: 'Paul', lastName: 'Rice' }
@@ -166,8 +166,6 @@ function Cluster(ipLocation) {
 						},
 					};
 				},
-
-
 					operationTimeout: 10000,
 					bucketName:bucketName,
 					atomicCounter: 'testAtomicCounter',
@@ -177,12 +175,17 @@ function Cluster(ipLocation) {
 						}
 					},
 					connected: true,
-
 			}
-		// this.collection =
-
-
 	};
+	this.ping = (options) => {
+		return options = {
+			cluster: 'couchbase://localhost:8091:8091',
+			auth: { username: 'Administrator', password: 'cbadmin' },
+			atomicCounter: 'enterpriseAtomicCounter',
+			operationTimeout: 20000,
+			onConnectCallback: {"message":"connected to Couchbase cdh bucket.","level":"info"}
+		};
+	}
 };
 
 
