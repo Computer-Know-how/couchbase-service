@@ -11,13 +11,14 @@ const sleep = promisify(setTimeout);
 let couchbaseService; // load manually w/mockery
 
 const configOptions = {
-	IPAddress: ["localhost:8091"],
-	portNumber: "8091",
+	IPAddress: ['localhost:8091'],
+	cluster: 'couchbase://localhost:8091',
+	portNumber: '8091',
 	bucket: 'test',
-	atomicDocumentName: "testCounter",
+	atomicDocumentName: 'testCounter',
 	auth: {
-		username: "Administrator",
-		password: "password"
+		username: 'Administrator',
+		password: 'password'
 	},
 	operationTimeout: 20000
 };
@@ -39,7 +40,6 @@ function testSuite(testName, tests) {
 			});
 			mockery.registerAllowable('../lib/index.js');
 			couchbaseService = require('../lib/index.js');
-			await sleep(1000);
 		});
 
 		//TESTS
@@ -80,7 +80,7 @@ testSuite('upsertCallback tests', () => {
 	it('upsertCallback test', () => {
 		return new Promise((resolve, reject) => {
 			const cb = new couchbaseService('test', configOptions);
-				cb.collection.upsertCallback('test::1', {firstName:'Paul', lastName: 'Rice2'}, null,(error, result) => {
+			cb.collection.upsertCallback('test::1', {firstName:'Paul', lastName: 'Rice2'}, null,(error, result) => {
 
 				assert.isNull(error);
 				assert.exists(result);
@@ -150,7 +150,7 @@ testSuite('getMultiCallback tests', () => {
 				assert.equal(result['test::1'].value.firstName, 'Paul');
 				assert.equal(result['test::2'].value.firstName, 'Paul');
 
-				return resolve(result)
+				return resolve(result);
 			});
 		});
 	}).timeout(5000);
@@ -166,7 +166,7 @@ testSuite('counterCallback tests', () => {
 				assert.isObject(result);
 				assert.equal(result.value, 2);
 
-				return resolve(result)
+				return resolve(result);
 			});
 		});
 	}).timeout(5000);
@@ -181,7 +181,7 @@ testSuite('touchCallback tests', () => {
 				assert.isNull(error);
 				assert.isObject(result);
 				assert.isObject(result.cas);
-				return resolve(result)
+				return resolve(result);
 			});
 		});
 	}).timeout(5000);
@@ -197,7 +197,7 @@ testSuite('removeCallback tests', () => {
 				assert.isObject(result);
 				assert.isObject(result.cas);
 
-				return resolve(result)
+				return resolve(result);
 			});
 		});
 	}).timeout(5000);
@@ -216,7 +216,7 @@ testSuite('unlockCallback tests', () => {
 					assert.isObject(result);
 					assert.isObject(result.cas);
 
-					return resolve(result)
+					return resolve(result);
 				});
 			});
 		});
@@ -235,9 +235,9 @@ testSuite('viewQueryCallback tests', () => {
 		};
 		cb.collection.viewQueryCallback(ddoc, name, queryOptions, (error, result) => {
 
-		assert.isObject(result);
-		assert.isArray(result.rows);
-		assert.isObject(result.meta)
+			assert.isObject(result);
+			assert.isArray(result.rows);
+			assert.isObject(result.meta);
 		});
 	});
 }); // END viewQueryCallback tests
@@ -246,13 +246,13 @@ testSuite('viewQueryCallback tests', () => {
 testSuite('n1qlQueryCallback tests', () => {
 	it('n1qlQueryCallback test', () => {
 		return new Promise((resolve, reject) => {
-		const cb = new couchbaseService('test', configOptions);
-		const n1ql = 'SELECT firstName from test where firstName LIKE Paul';
-		cb.collection.n1qlQueryCallback(n1ql, (error, result) => {
+			const cb = new couchbaseService('test', configOptions);
+			const n1ql = 'SELECT firstName from test where firstName LIKE Paul';
+			cb.collection.n1qlQueryCallback(n1ql, (error, result) => {
 
 				assert.isNull(error);
 				assert.isArray(result);
-				return resolve(result)
+				return resolve(result);
 			});
 		});
 	}).timeout(5000);

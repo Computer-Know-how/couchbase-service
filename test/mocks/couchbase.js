@@ -4,9 +4,10 @@
 /*
 	COUCHBASE DSN MOCK OBJECT -------------------------------------------
 */
-function Cluster(ipLocation) {
-	this.ipLocation = ipLocation;
-	this.bucket = (bucketName, callback) => {
+
+function connect(cluster, auth, callback) {
+	cluster = {
+		bucket: (bucketName, callback) => {
 			return {
 				defaultCollection: () => {
 					return {
@@ -176,29 +177,11 @@ function Cluster(ipLocation) {
 					},
 					connected: true,
 			}
-	};
-	this.ping = (options) => {
-		return options = {
-			cluster: 'couchbase://localhost:8091:8091',
-			auth: { username: 'Administrator', password: 'cbadmin' },
-			atomicCounter: 'enterpriseAtomicCounter',
-			operationTimeout: 20000,
-			onConnectCallback: {"message":"connected to Couchbase cdh bucket.","level":"info"}
-		};
+		}
 	}
+
+	return callback(null, cluster);
 };
-
-
-/**
-	* ViewQuery mock
-	* generates: {
-	*		ddoc: 'data_lake_TCAID_by_customerID',
-	*		name: 'data_lake_TCAID_by_customerID',
-	*		options: { descending: true, stale: 'false', key: '"2683448"' } || { descending: true, limit: '20', skip: '0', stale: 'false' },,
-	*		postoptions: {}
-	*	}
-*/
-
 
 function ViewQuery() {
 	this.ddoc = null;
@@ -286,7 +269,7 @@ N1qlQuery.fromString = function(n1ql) {
 */
 
 module.exports = {
-	Cluster,
+	connect,
 	ViewQuery,
 	N1qlQuery
 };
