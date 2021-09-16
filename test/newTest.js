@@ -6,9 +6,7 @@
 
 const { assert } = require('chai');
 
-const mockery = require('mockery');
-
-const {promisify} = require('util');
+const { promisify } = require('util');
 
 const sleep = promisify(setTimeout);
 
@@ -28,8 +26,6 @@ const configOptions = {
 	operationTimeout: 20000,
 	onConnectCallback: async (error) => {
 		if(error) {
-			console.error(error);
-			console.log('configOptions', configOptions);
 			process.exit(1);
 		} else {
 			console.log('connected to Couchbase default bucket.');
@@ -37,8 +33,6 @@ const configOptions = {
 	},
 	onReconnectCallback: (error, message) => {
 		if(error) {
-			console.error(error);
-			console.log('configOptions', configOptions);
 			console.log('Adjust configOptions to your local, live Coucbhase setup to run test suite');
 			process.exit(1);
 		}
@@ -56,45 +50,31 @@ function testSuite(testName, tests) {
 		this.timeout(150000);
 		//SETUP
 		before(async() => {
-			console.log('BEFORE');
 			try {
 				//setup
 				({ CouchbaseService } = require('../lib/index.js'));
 				CBS = new CouchbaseService('default', configOptions);
-				console.log('before sleep');
 				await sleep(2000);
-				console.log('after sleep');
-				// for(let { key, value } of freshDocs()) {
-				// 	await CBS.upsertPromise(key, value);
-				// }
-				// console.log('CBS', CBS);
-				//undo
-				// CouchbaseService = null;
+				if(testName === 'GET tests') {
+					for(let { key, value } of freshDocs()) {
+						await CBS.upsertPromise(key, value);
+					}
+				}
 			} catch(e) {
 				console.log('e', e);
 			}
 		});
 
-		beforeEach(() => {
-			mockery.enable({ useCleanCache: true, warnOnUnregistered: false });
-		});
+		beforeEach(() => {});
 
 		//TESTS
 		tests(iteration);
 
 		//TEARDOWN
-		afterEach(() => {
-			mockery.resetCache();
-			mockery.disable();
-		});
+		afterEach(() => {});
 
-		after(() => {
-			//tear down
-			CouchbaseService = null;
-			CBS = null;
-		});
+		after(() => {});
 	});
-
 }
 
 /*
@@ -103,7 +83,7 @@ function testSuite(testName, tests) {
 
 testSuite('GET tests', async (iteration) => {
 	//getCallback()
-	it(`${iteration++} getCallback() success test`, () => {
+	it(`${iteration++}. getCallback() success test`, () => {
 		const docName = 'thing::1';
 
 		CBS.getCallback(docName, (error, result) => {
@@ -112,7 +92,7 @@ testSuite('GET tests', async (iteration) => {
 		});
 	});
 
-	it(`${iteration++} getCallback() code 13 (doc not found) test`, () => {
+	it(`${iteration++}. getCallback() code 13 (doc not found) test`, () => {
 		const docName = 'thing::42';
 
 		CBS.getCallback(docName, (error, result) => {
@@ -125,7 +105,7 @@ testSuite('GET tests', async (iteration) => {
 	});
 
 	//getPromise()
-	it(`${iteration++} getPromise() success test`, async () => {
+	it(`${iteration++}. getPromise() success test`, async () => {
 		try {
 			const docName = 'thing::1';
 
@@ -137,7 +117,7 @@ testSuite('GET tests', async (iteration) => {
 		}
 	});
 
-	it(`${iteration++} getPromise() code 13 (doc not found) test`, async () => {
+	it(`${iteration++}. getPromise() code 13 (doc not found) test`, async () => {
 		try {
 			const docName = 'thing::42';
 
@@ -152,7 +132,7 @@ testSuite('GET tests', async (iteration) => {
 	});
 
 	//getAndLockCallback()
-	it(`${iteration++} getAndLockCallback() success test`, async () => {
+	it(`${iteration++}. getAndLockCallback() success test`, async () => {
 		const docName = 'thing::1';
 
 		CBS.getAndLockCallback(docName, 1, async (error, result) => {
@@ -165,7 +145,7 @@ testSuite('GET tests', async (iteration) => {
 		});
 	});
 
-	it(`${iteration++} getAndLockCallback() code 13 (doc not found) test`, async () => {
+	it(`${iteration++}. getAndLockCallback() code 13 (doc not found) test`, async () => {
 		CBS.getAndLockCallback('thing::42', 1, (error, result) => {
 			assert.isNotObject(error);
 			assert.strictEqual(error.constructor.name, 'DocumentNotFoundError');
@@ -176,7 +156,7 @@ testSuite('GET tests', async (iteration) => {
 	});
 
 	//getAndLockPromise()
-	it(`${iteration++} getAndLockPromise() success test`, async () => {
+	it(`${iteration++}. getAndLockPromise() success test`, async () => {
 		try {
 			const docName = 'thing::1';
 
@@ -192,7 +172,7 @@ testSuite('GET tests', async (iteration) => {
 		}
 	});
 
-	it(`${iteration++} getAndLockPromise() code 13 (doc not found) test`, async () => {
+	it(`${iteration++}. getAndLockPromise() code 13 (doc not found) test`, async () => {
 		try {
 			const docName = 'thing::42';
 
@@ -207,7 +187,7 @@ testSuite('GET tests', async (iteration) => {
 	});
 
 	//getMultiCallback()
-	it(`${iteration++} getMultiCallback() full success test`, () => {
+	it(`${iteration++}. getMultiCallback() full success test`, () => {
 		const arDocNames = freshDocs().map(fd => fd.key);
 
 		CBS.getMultiCallback(arDocNames, (error, result) => {
@@ -221,7 +201,7 @@ testSuite('GET tests', async (iteration) => {
 		});
 	});
 
-	it(`${iteration++} getMultiCallback() mixed results test`, () => {
+	it(`${iteration++}. getMultiCallback() mixed results test`, () => {
 		const arDocNames = freshDocs().map(fd => fd.key).concat('thing::42');
 
 		CBS.getMultiCallback(arDocNames, (error, result) => {
@@ -242,7 +222,7 @@ testSuite('GET tests', async (iteration) => {
 	});
 
 	//getMultiPromise()
-	it(`${iteration++} getMultiPromise() full success test`, async () => {
+	it(`${iteration++}. getMultiPromise() full success test`, async () => {
 		try {
 			const arDocNames = freshDocs().map(fd => fd.key);
 
@@ -260,7 +240,7 @@ testSuite('GET tests', async (iteration) => {
 		}
 	});
 
-	it(`${iteration++} getMultiPromise() mixed results test`, async () => {
+	it(`${iteration++}. getMultiPromise() mixed results test`, async () => {
 		try {
 			const arDocNames = freshDocs().map(fd => fd.key).concat('thing::42');
 
@@ -288,7 +268,7 @@ testSuite('GET tests', async (iteration) => {
 
 testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	//insertCallback()
-	it(`${iteration++} insertCallback() success test`, () => {
+	it(`${iteration++}. insertCallback() success test`, () => {
 		const { key, value } = oThing(4);
 
 		CBS.insertCallback(key, value, (error, result) => {
@@ -297,7 +277,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 		});
 	});
 
-	it(`${iteration++} insertCallback() doc exists test`, () => {
+	it(`${iteration++}. insertCallback() doc exists test`, () => {
 		const { key, value } = oThing(4);
 
 		CBS.insertCallback(key, value, (error, result) => {
@@ -307,7 +287,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	});
 
 	//insertPromise()
-	it(`${iteration++} insertPromise() success test`, async () => {
+	it(`${iteration++}. insertPromise() success test`, async () => {
 		const { key, value } = oThing(5);
 
 		try {
@@ -315,11 +295,11 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 
 			assert.strictEqual(ip.constructor.name, 'MutationResult');
 		} catch(e) {
-			throw new Error(`should NOT have failed: ${e.message}`);
+			assert.strictEqual(e.constructor.name, 'DocumentExistsError');
 		}
 	});
 
-	it(`${iteration++} insertPromise() doc exists test`, async () => {
+	it(`${iteration++}. insertPromise() doc exists test`, async () => {
 		const { key, value } = oThing(5);
 
 		try {
@@ -332,7 +312,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	});
 
 	//upsertCallback()
-	it(`${iteration++} upsertCallback() no cas success test`, () => {
+	it(`${iteration++}. upsertCallback() no cas (upsert) success test`, () => {
 		const { key, value } = oThing(4);
 
 		CBS.upsertCallback(key, value, (error, result) => {
@@ -341,7 +321,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 		});
 	});
 
-	it(`${iteration++} upsertCallback() cas success test`, async () => {
+	it(`${iteration++}. upsertCallback() cas (replace) success test`, async () => {
 		const { key } = oThing(4);
 
 		const { value, cas } = await CBS.getAndLockPromise(key);
@@ -353,7 +333,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	});
 
 	//upsertPromise
-	it(`${iteration++} upsertPromise() no cas success test`, async () => {
+	it(`${iteration++}. upsertPromise() no cas (upsert) success test`, async () => {
 		try {
 			const { key, value } = oThing(4);
 
@@ -365,7 +345,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 		}
 	});
 
-	it(`${iteration++} upsertPromise() cas success test`, async () => {
+	it(`${iteration++}. upsertPromise() cas (replace) success test`, async () => {
 		try {
 			const { key } = oThing(4);
 			const { value, cas } = await CBS.getAndLockPromise(key);
@@ -379,7 +359,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	});
 
 	//replaceCallback()
-	it(`${iteration++} replaceCallback() cas success test`, async () => {
+	it(`${iteration++}. replaceCallback() cas success test`, async () => {
 		const { key } = oThing(4);
 		const { value, cas } = await CBS.getAndLockPromise(key);
 
@@ -390,7 +370,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 	});
 
 	//replacePromise()
-	it(`${iteration++} replacePromise() cas success test`, async () => {
+	it(`${iteration++}. replacePromise() cas success test`, async () => {
 		try {
 			const { key } = oThing(4);
 			const { value, cas } = await CBS.getAndLockPromise(key);
@@ -405,310 +385,320 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 });// INSERT/UPSERT/REPLACE tests
 
 
-// testSuite('counterCallback tests', () => {
-// 	it('counterCallback test', () => {
-// 		return new Promise((resolve, reject) => {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			cb.collection.counterCallback((error, result) => {
+testSuite('REMOVE/UNLOCK/TOUCH tests', async (iteration) => {
+	//removeCallback()
+	it(`${iteration++}. removeCallback() success test`, async () => {
+		const { key, value } = oThing(4);
+		await CBS.upsertPromise(key, value);
 
-// 				assert.isNull(error);
-// 				assert.isObject(result);
-// 				assert.equal(result.value, 2);
+		CBS.removeCallback(key, (error, result) => {
+			assert.isNull(error);
+			assert.strictEqual(result.constructor.name, 'MutationResult');
+		});
+	});
 
-// 				return resolve(result);
-// 			});
-// 		});
-// 	}).timeout(5000);
-// }); // END counterCallback tests
+	it(`${iteration++}. removeCallback() cas success test`, async () => {
+		const { key, value } = oThing(4);
+		await CBS.upsertPromise(key, value);
+		const { cas } = await CBS.getAndLockPromise(key, 2);
 
-// testSuite('touchCallback tests', () => {
-// 	it('touchCallback test', () => {
-// 		return new Promise((resolve, reject) => {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			cb.collection.touchCallback('test::1', 5, null, (error, result) => {
+		CBS.removeCallback(key, { cas }, (error, result) => {
+			assert.isNull(error);
+			assert.strictEqual(result.constructor.name, 'MutationResult');
+		});
+	});
 
-// 				assert.isNull(error);
-// 				assert.isObject(result);
-// 				assert.isObject(result.cas);
-// 				return resolve(result);
-// 			});
-// 		});
-// 	}).timeout(5000);
-// }); // END touchCallback tests
+	//removePromise()
+	it(`${iteration++}. removePromise() success test`, async () => {
+		try {
+			const { key, value } = oThing(4);
+			await CBS.upsertPromise(key, value);
 
-// testSuite('removeCallback tests', () => {
-// 	it('removeCallback test', () => {
-// 		return new Promise((resolve, reject) => {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			cb.collection.removeCallback('test::1', null, (error, result) => {
+			const rp = await CBS.removePromise(key);
 
-// 				assert.isNull(error);
-// 				assert.isObject(result);
-// 				assert.isObject(result.cas);
+			assert.strictEqual(rp.constructor.name, 'MutationResult');
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// 				return resolve(result);
-// 			});
-// 		});
-// 	}).timeout(5000);
-// }); // END removeCallback tests
+	it(`${iteration++}. removePromise() cas success test`, async () => {
+		try {
+			const { key, value } = oThing(4);
+			await CBS.upsertPromise(key, value);
+			const { cas } = await CBS.getAndLockPromise(key, 2);
 
+			const rp = await CBS.removePromise(key, { cas });
 
+			assert.strictEqual(rp.constructor.name, 'MutationResult');
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// testSuite('unlockCallback tests', () => {
-// 	it('unlockCallback test', () => {
-// 		return new Promise((resolve, reject) => {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			cb.collection.getAndLockCallback('test::1', 15, (error, result) => {
-// 				const cas = result.cas;
-// 				cb.collection.unlockCallback('test::1', cas, (error, result) => {
-// 					assert.isNull(error);
-// 					assert.isObject(result);
-// 					assert.isObject(result.cas);
+	//unlockCallback()
+	it(`${iteration++}. unlockCallback() success test`, async () => {
+		const { key } = oThing(1);
+		const { cas } = await CBS.getAndLockPromise(key, 2);
 
-// 					return resolve(result);
-// 				});
-// 			});
-// 		});
-// 	}).timeout(5000);
-// }); // END unlockCallback tests
+		CBS.unlockCallback(key, cas, (error) => {
+			assert.isNull(error);
+		});
+	});
 
-// testSuite('viewQueryCallback tests', () => {
-// 	it('viewQueryCallback test', () => {
-// 		const cb = new CouchbaseService('test', configOptions);
-// 		const ddoc = 'getAllNames';
-// 		const name = 'getAllNames';
-// 		const queryOptions = {
-// 			limit: 10,
-// 			skip: 0,
-// 			order: 'descending'
-// 		};
-// 		cb.collection.viewQueryCallback(ddoc, name, queryOptions, (error, result) => {
+	it(`${iteration++}. unlockCallback() failure test`, async () => {
+		const { key } = oThing(1);
+		const { cas } = await CBS.getAndLockPromise(key, 1);
 
-// 			assert.isObject(result);
-// 			assert.isArray(result.rows);
-// 			assert.isObject(result.meta);
-// 		});
-// 	});
-// }); // END viewQueryCallback tests
+		CBS.unlockCallback(key, { cas:'1234' }, (error) => {
+			assert.include(error.message, 'bad cas passed');
+			CBS.unlockCallback(key, cas, (error) => {
+				assert.isNull(error);
+			});
+		});
+	});
 
+	//unlockPromise()
+	it(`${iteration++}. unlockPromise() success test`, async () => {
+		const { key } = oThing(1);
+		const { cas } = await CBS.getAndLockPromise(key, 2);
 
-// testSuite('n1qlQueryCallback tests', () => {
-// 	it('n1qlQueryCallback test', () => {
-// 		return new Promise((resolve, reject) => {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			const n1ql = 'SELECT firstName from test where firstName LIKE Paul';
-// 			cb.collection.n1qlQueryCallback(n1ql, (error, result) => {
+		try {
+			const up = await CBS.unlockPromise(key, cas);
 
-// 				assert.isNull(error);
-// 				assert.isArray(result);
-// 				return resolve(result);
-// 			});
-// 		});
-// 	}).timeout(5000);
-// }); // END n1qlQueryCallback tests
+			assert.isNull(up);
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
+	it(`${iteration++}. unlockPromise() failure test`, async () => {
+		const { key } = oThing(1);
+		const { cas } = await CBS.getAndLockPromise(key, 1);
 
-// testSuite('insertPromise tests', () => {
-// 	it('insertPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.insertPromise('test::1', {firstName:'Paul', lastName: 'Rice'}, {});
+		try {
+			await CBS.unlockPromise(key);
 
-// 			assert.isObject(result);
-// 			assert.isObject(result.cas);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END insertPromise tests
+			throw new Error('should NOT have succeeded');
+		} catch(e) {
+			assert.include(e.message, 'invalid arguments');
 
-// testSuite('upsertPromise tests', () => {
-// 	it('upsertPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.upsertPromise('test::1', {firstName:'Rice', lastName: 'Paul'});
+			try {
+				const up = await CBS.unlockPromise(key, cas);
 
-// 			assert.isObject(result);
-// 			assert.property(result, 'cas');
-// 			assert.isObject(result.cas);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
+				assert.isNull(up);
+			} catch(e) {
+				throw new Error(`should NOT have failed: ${e.message}`);
+			}
+		}
+	});
 
-// 	}).timeout(5000);
-// });
+	//touchCallback()
+	it(`${iteration++}. touchCallback() success test`, async () => {
+		const { key } = oThing(1);
 
+		CBS.touchCallback(key, 0, (error, result) => {
+			assert.isNull(error);
+			assert.strictEqual(result.constructor.name, 'MutationResult');
+		});
+	});
 
-// testSuite('getPromise tests', () => {
-// 	it('getPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.getPromise('test::1');
+	it(`${iteration++}. touchCallback() failure test`, async () => {
+		const { key } = oThing(7);
 
-// 			assert.isObject(result);
-// 			assert.property(result, 'firstName');
-// 			assert.property(result, 'lastName');
-// 			assert.equal(result.firstName, 'Paul');
-// 			assert.equal(result.lastName, 'Rice');
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
+		CBS.touchCallback(key, 0, (error, result) => {
+			assert.strictEqual(error.code, 13);
+			assert.isNull(result);
+		});
+	});
 
+	//touchPromise()
+	it(`${iteration++}. touchPromise() success test`, async () => {
+		const { key } = oThing(1);
 
-// 	}).timeout(5000);
-// }); // END getPromise tests
+		try {
+			const tp = await CBS.touchPromise(key, 0);
 
+			assert.strictEqual(tp.constructor.name, 'MutationResult');
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// testSuite('getAndLockPromise tests', () => {
-// 	it('getAndLockPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.getAndLockPromise('test::1', 15);
+	it(`${iteration++}. touchPromise() failure test`, async () => {
+		const { key } = oThing(7);
 
-// 			assert.isObject(result);
-// 			assert.property(result, 'cas');
-// 			assert.isObject(result.cas);
-// 			assert.property(result.value, 'firstName');
-// 			assert.property(result.value, 'lastName');
-// 			assert.equal(result.value.firstName, 'Paul');
-// 			assert.equal(result.value.lastName, 'Rice');
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
+		try {
+			await CBS.touchPromise(key, 0);
 
-// 	}).timeout(5000);
-// }); // END getAndLockPromise tests
-
-// testSuite('getMultiPromise tests', () => {
-// 	it('getMultiPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.getMultiPromise(['test::1', 'test::2']);
-// 			assert.isObject(result.result['test::1']);
-// 			assert.isObject(result.result['test::2']);
-// 			assert.isObject(result.result['test::1'].cas);
-// 			assert.isObject(result.result['test::2'].cas);
-// 			assert.equal(result.result['test::1'].content.firstName, 'Paul');
-// 			assert.equal(result.result['test::2'].content.firstName, 'Rice');
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-
-// 	}).timeout(5000);
-// }); // END getMultiPromise tests
-
-// testSuite('counterPromise tests', () => {
-// 	it('counterPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.counterPromise();
-
-// 			assert.isObject(result);
-// 			assert.isObject(result.cas);
-// 			assert.isObject(result.token);
-// 			assert.equal(result.value, 2);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END counterPromise tests
+			throw new Error('should NOT have succeeded');
+		} catch(e) {
+			assert.strictEqual(e.code, 13);
+		}
+	});
+});// REMOVE/UNLOCK/TOUCH tests
 
 
-// testSuite('removePromise tests', () => {
-// 	it('removePromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.removePromise('test::1');
+testSuite('QUERY related tests', async (iteration) => {
+	//upsertDesignDocumentCallback()
+	it(`${iteration++}. upsertDesignDocumentCallback() success test`, () => {
+		const view = {
+			doctype_thing: {
+				map:`function(doc, meta) {
+					if(doc.doctype === 'thing') {
+						emit(meta.id, doc);
+					}
+				}`
+			}
+		};
+		CBS.upsertDesignDocumentCallback('thing', view, true, (error, response) => {
+			assert.isNull(error);
+			assert.isUndefined(response);
+		});
+	});
 
-// 			assert.isObject(result);
-// 			assert.isObject(result.cas)
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
+	//upsertDesignDocumentPromise()
+	it(`${iteration++}. upsertDesignDocumentPromise() success test`, async () => {
+		const view = {
+			doctype_thing: {
+				map:`function(doc, meta) {
+					if(doc.doctype === 'thing') {
+						emit(meta.id, doc);
+					}
+				}`
+			}
+		};
 
-// 	}).timeout(5000);
-// }); // END removePromise tests
+		try {
+			const uddp = await CBS.upsertDesignDocumentPromise('thing', view, true);
 
+			assert.isNull(uddp);
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// testSuite('touchPromise tests', () => {
-// 	it('touchPromise test', async  () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.touchPromise('test::1', 5);
+	//viewQueryCallback()
+	it(`${iteration++}. viewQueryCallback() ascending success test`, () => {
+		CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'ascending' }, (error, result) => {
+			assert.isNull(error);
+			assert.strictEqual(result.constructor.name, 'ViewResult');
+			assert.isArray(result.rows);
+			assert.isNotEmpty(result.rows);
+			result.rows.map((r, index) => {
+				assert.strictEqual(r.constructor.name, 'ViewRow');
+				if(index) {
+					assert.isAbove(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
+				}
+			});
+			assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
+		});
+	});
 
-// 			assert.isObject(result);
-// 			assert.isObject(result.cas);
+	it(`${iteration++}. viewQueryCallback() desending success test`, () => {
+		CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'descending' }, (error, result) => {
+			assert.isNull(error);
+			assert.strictEqual(result.constructor.name, 'ViewResult');
+			assert.isArray(result.rows);
+			assert.isNotEmpty(result.rows);
+			result.rows.map((r, index) => {
+				assert.strictEqual(r.constructor.name, 'ViewRow');
+				if(index) {
+					assert.isBelow(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
+				}
+			});
+			assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
+		});
+	});
 
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END touchPromise tests
+	//viewQueryPromise()
+	it(`${iteration++}. viewQueryPromise() ascending success test`, async () => {
+		try {
+			const vqp = await CBS.viewQueryPromise('dev_thing', 'doctype_thing', { order:'ascending' });
 
-// testSuite('unlockPromise tests', () => {
-// 	it('unlockPromise test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let getCas = await cb.collection.getAndLockPromise('test::1', 15);
-// 			const cas = getCas.cas
-// 			let result = await cb.collection.unlockPromise('test::1', cas);
+			assert.strictEqual(vqp.constructor.name, 'ViewResult');
+			assert.isArray(vqp.rows);
+			assert.isNotEmpty(vqp.rows);
+			vqp.rows.map((r, index) => {
+				assert.strictEqual(r.constructor.name, 'ViewRow');
+				if(index) {
+					assert.isAbove(Number(r.key.match(/\d+/g)[0]), Number(vqp.rows[index-1].key.match(/\d+/g)[0]));
+				}
+			});
+			assert.strictEqual(vqp.meta.constructor.name, 'ViewMetaData');
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// 			assert.isObject(result);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END unlockPromise tests
+	it(`${iteration++}. viewQueryPromise() desending success test`, async () => {
+		try {
+			const vqp = await CBS.viewQueryPromise('dev_thing', 'doctype_thing', { order:'descending' });
 
-// testSuite('viewQueryPromise tests', () => {
-// 	it('viewQueryPromise test', async () => {
-// 		const cb = new CouchbaseService('test', configOptions);
-// 		const ddoc = 'getAllNames';
-// 		const name = 'getAllNames';
-// 		const queryOptions = {
-// 			limit: 10,
-// 			skip: 0,
-// 			order: 'descending',
-// 			descending: false,
-// 			timeout: 10000
-// 		};
-// 		let result = await cb.collection.viewQueryPromise(ddoc, name, queryOptions);
+			assert.strictEqual(vqp.constructor.name, 'ViewResult');
+			assert.isArray(vqp.rows);
+			assert.isNotEmpty(vqp.rows);
+			vqp.rows.map((r, index) => {
+				assert.strictEqual(r.constructor.name, 'ViewRow');
+				if(index) {
+					assert.isBelow(Number(r.key.match(/\d+/g)[0]), Number(vqp.rows[index-1].key.match(/\d+/g)[0]));
+				}
+			});
+			assert.strictEqual(vqp.meta.constructor.name, 'ViewMetaData');
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
 
-// 		assert.isObject(result);
-// 		assert.isArray(result.rows);
-// 		assert.isObject(result.meta);
-// 	}).timeout(5000);
-// }); // END viewQueryPromise tests
+	//n1qlQueryCallback()
+	it(`${iteration++}. n1qlQueryCallback() create doctype index test`, () => {
+		const n1ql = 'CREATE INDEX `doctype` ON `default`(`doctype`) USING GSI;';
 
-// testSuite('n1qlQueryPromise tests', () => {
-// 	it('n1qlQueryPromise test', async () => {
-// 		const n1ql = 'SELECT firstName from test where firstName LIKE Paul';
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			let result = await cb.collection.n1qlQueryPromise(n1ql);
+		CBS.n1qlQueryCallback(n1ql, (error, result) => {
+			if(error) {
+				assert.strictEqual(error.constructor.name, 'IndexExistsError');
+			} else {
+				assert.isArray(result);
+				assert.isEmpty(result);
+			}
+		});
+	});
 
-// 			assert.isArray(result);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END n1qlQueryPromise tests
+	it(`${iteration++}. n1qlQueryCallback() doctype pull test`, () => {
+		const n1ql = 'SELECT * FROM `default` WHERE doctype="thing"';
 
-// testSuite('exists tests', () => {
-// 	it('exists test', async () => {
-// 		try {
-// 			const cb = new CouchbaseService('test', configOptions);
-// 			const key = 'test::1';
-// 			let result = await cb.collection.exists(key);
+		CBS.n1qlQueryCallback(n1ql, (error, result) => {
+			assert.isNull(error);
+			assert.isArray(result);
+			assert.isNotEmpty(result);
+			result.map((value, index) => {
+				assert.isObject(value);
+				assert.hasAllKeys(value, ['default']);
+				assert.isObject(value.default);
+				assert.hasAllKeys(value.default, ['bazinga', 'foo', 'doctype']);
+			});
+		});
+	});
 
-// 			assert.isObject(result);
-// 			assert.isObject(result.cas)
-// 			assert.isBoolean(result.exists);
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}).timeout(5000);
-// }); // END exists tests
+	it(`${iteration++}. n1qlQueryPromise() doctype pull test`, async () => {
+		const n1ql = 'SELECT * FROM `default` WHERE doctype="thing"';
+
+		try {
+			const nqp = await CBS.n1qlQueryPromise(n1ql);
+
+			assert.isArray(nqp);
+			assert.isNotEmpty(nqp);
+			nqp.map((value, index) => {
+				assert.isObject(value);
+				assert.hasAllKeys(value, ['default']);
+				assert.isObject(value.default);
+				assert.hasAllKeys(value.default, ['bazinga', 'foo', 'doctype']);
+			});
+		} catch(e) {
+			throw new Error(`should NOT have failed: ${e.message}`);
+		}
+	});
+});// QUERY related tests
 
 
 /*
