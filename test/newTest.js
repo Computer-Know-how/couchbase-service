@@ -382,7 +382,7 @@ testSuite('INSERT/UPSERT/REPLACE tests', async (iteration) => {
 			throw new Error(`should NOT have failed: ${e.message}`);
 		}
 	});
-});// INSERT/UPSERT/REPLACE tests
+});// END INSERT/UPSERT/REPLACE tests
 
 
 testSuite('REMOVE/UNLOCK/TOUCH tests', async (iteration) => {
@@ -536,7 +536,7 @@ testSuite('REMOVE/UNLOCK/TOUCH tests', async (iteration) => {
 			assert.strictEqual(e.code, 13);
 		}
 	});
-});// REMOVE/UNLOCK/TOUCH tests
+});// END REMOVE/UNLOCK/TOUCH tests
 
 
 testSuite('QUERY related tests', async (iteration) => {
@@ -551,6 +551,7 @@ testSuite('QUERY related tests', async (iteration) => {
 				}`
 			}
 		};
+
 		CBS.upsertDesignDocumentCallback('thing', view, true, (error, response) => {
 			assert.isNull(error);
 			assert.isUndefined(response);
@@ -578,41 +579,63 @@ testSuite('QUERY related tests', async (iteration) => {
 		}
 	});
 
-	//viewQueryCallback()
-	it(`${iteration++}. viewQueryCallback() ascending success test`, () => {
-		CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'ascending' }, (error, result) => {
-			assert.isNull(error);
-			assert.strictEqual(result.constructor.name, 'ViewResult');
-			assert.isArray(result.rows);
-			assert.isNotEmpty(result.rows);
-			result.rows.map((r, index) => {
-				assert.strictEqual(r.constructor.name, 'ViewRow');
-				if(index) {
-					assert.isAbove(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
-				}
-			});
-			assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
-		});
-	});
+	it('<WAIT FOR VQ TO POPULATE>', async () => {
+		await sleep(1000);
+		CBS.viewQueryCallback('dev_thing', 'doctype_thing', {}, () => {});
+	}).timeout(5000);
 
-	it(`${iteration++}. viewQueryCallback() desending success test`, () => {
-		CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'descending' }, (error, result) => {
-			assert.isNull(error);
-			assert.strictEqual(result.constructor.name, 'ViewResult');
-			assert.isArray(result.rows);
-			assert.isNotEmpty(result.rows);
-			result.rows.map((r, index) => {
-				assert.strictEqual(r.constructor.name, 'ViewRow');
-				if(index) {
-					assert.isBelow(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
+	//viewQueryCallback()
+	it(`${iteration++}. viewQueryCallback() ascending success test`, async () => {
+		await sleep(1000);
+		return new Promise((resolve, reject) => {
+			CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'ascending' }, (error, result) => {
+				try {
+					assert.isNull(error);
+					assert.strictEqual(result.constructor.name, 'ViewResult');
+					assert.isArray(result.rows);
+					assert.isNotEmpty(result.rows);
+					result.rows.map((r, index) => {
+						assert.strictEqual(r.constructor.name, 'ViewRow');
+						if(index) {
+							assert.isAbove(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
+						}
+					});
+					assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
+					return resolve(null);
+				} catch(e) {
+					return reject(e);
 				}
 			});
-			assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
 		});
-	});
+	}).timeout(5000);
+
+	it(`${iteration++}. viewQueryCallback() desending success test`, async () => {
+		await sleep(1000);
+		return new Promise((resolve, reject) => {
+			CBS.viewQueryCallback('dev_thing', 'doctype_thing', { order:'descending' }, (error, result) => {
+				try {
+					assert.isNull(error);
+					assert.strictEqual(result.constructor.name, 'ViewResult');
+					assert.isArray(result.rows);
+					assert.isNotEmpty(result.rows);
+					result.rows.map((r, index) => {
+						assert.strictEqual(r.constructor.name, 'ViewRow');
+						if(index) {
+							assert.isBelow(Number(r.key.match(/\d+/g)[0]), Number(result.rows[index-1].key.match(/\d+/g)[0]));
+						}
+					});
+					assert.strictEqual(result.meta.constructor.name, 'ViewMetaData');
+					return resolve(null);
+				} catch(e) {
+					return reject(e);
+				}
+			});
+		});
+	}).timeout(5000);
 
 	//viewQueryPromise()
 	it(`${iteration++}. viewQueryPromise() ascending success test`, async () => {
+		await sleep(1000);
 		try {
 			const vqp = await CBS.viewQueryPromise('dev_thing', 'doctype_thing', { order:'ascending' });
 
@@ -629,9 +652,10 @@ testSuite('QUERY related tests', async (iteration) => {
 		} catch(e) {
 			throw new Error(`should NOT have failed: ${e.message}`);
 		}
-	});
+	}).timeout(5000);
 
 	it(`${iteration++}. viewQueryPromise() desending success test`, async () => {
+		await sleep(1000);
 		try {
 			const vqp = await CBS.viewQueryPromise('dev_thing', 'doctype_thing', { order:'descending' });
 
@@ -648,30 +672,36 @@ testSuite('QUERY related tests', async (iteration) => {
 		} catch(e) {
 			throw new Error(`should NOT have failed: ${e.message}`);
 		}
-	});
+	}).timeout(5000);
 
 	//n1qlQueryCallback()
-	it(`${iteration++}. n1qlQueryCallback() create doctype index test`, () => {
+	it(`${iteration++}. n1qlQueryCallback() create doctype index test (long wait for index load)`, async () => {
 		const n1ql = 'CREATE INDEX `doctype` ON `default`(`doctype`) USING GSI;';
-
-		CBS.n1qlQueryCallback(n1ql, (error, result) => {
-			if(error) {
-				assert.strictEqual(error.constructor.name, 'IndexExistsError');
-			} else {
-				assert.isArray(result);
-				assert.isEmpty(result);
-			}
+		return new Promise((resolve, reject) => {
+			CBS.n1qlQueryCallback(n1ql, (error, result) => {
+				try {
+					if(error) {
+						assert.strictEqual(error.constructor.name, 'IndexExistsError');
+					} else {
+						assert.isArray(result);
+						assert.isEmpty(result);
+					}
+					return resolve(null);
+				} catch(e) {
+					return reject(e);
+				}
+			});
 		});
-	});
+	}).timeout(10000);
 
-	it(`${iteration++}. n1qlQueryCallback() doctype pull test`, () => {
+	it(`${iteration++}. n1qlQueryCallback() doctype pull test`, async () => {
 		const n1ql = 'SELECT * FROM `default` WHERE doctype="thing"';
 
 		CBS.n1qlQueryCallback(n1ql, (error, result) => {
 			assert.isNull(error);
 			assert.isArray(result);
 			assert.isNotEmpty(result);
-			result.map((value, index) => {
+			result.map((value) => {
 				assert.isObject(value);
 				assert.hasAllKeys(value, ['default']);
 				assert.isObject(value.default);
@@ -688,7 +718,7 @@ testSuite('QUERY related tests', async (iteration) => {
 
 			assert.isArray(nqp);
 			assert.isNotEmpty(nqp);
-			nqp.map((value, index) => {
+			nqp.map((value) => {
 				assert.isObject(value);
 				assert.hasAllKeys(value, ['default']);
 				assert.isObject(value.default);
@@ -698,7 +728,58 @@ testSuite('QUERY related tests', async (iteration) => {
 			throw new Error(`should NOT have failed: ${e.message}`);
 		}
 	});
-});// QUERY related tests
+});// END QUERY related tests
+
+
+testSuite('CLEANUP', async (iteration) => {
+	it(`${iteration++}. remove remaining docs`, async () => {
+		try {
+			for(let { key } of (freshDocs().concat(oThing(5)))) {
+				try {
+					await CBS.removePromise(key);
+
+					console.log(`Removed doc ${key}`);
+				} catch(e) {
+					console.log(`Error removing doc ${key}`);
+				}
+			}
+		} catch(e) {
+			console.log(`Error removing docs: ${e.message}`);
+		}
+	});
+
+	it(`${iteration++}. remove n1ql indexes`, async () => {
+		try {
+			for(let { bucket, index } of [{ bucket:'default', index:'doctype' }]) {
+				try {
+					await CBS.n1qlQueryPromise(`DROP INDEX ${bucket}.${index};`);
+
+					console.log(`Removed index ${bucket}.${index}`);
+				} catch(e) {
+					console.log(`Error removing index ${bucket}.${index}: ${e.message}`);
+				}
+			}
+		} catch(e) {
+			console.log(`Error removing indexes: ${e.message}`);
+		}
+	});
+
+	it(`${iteration++}. remove view queries`, async () => {
+		try {
+			for(let designDocName of ['thing']) {
+				try {
+					await CBS.dropDesignDocumentPromise(designDocName, true);
+
+					console.log(`Removed view query design doc: ${designDocName}`);
+				} catch(e) {
+					console.log(`Error removing view query design doc: ${designDocName}: ${e.message}`);
+				}
+			}
+		} catch(e) {
+			console.log(`Error removing view queries: ${e.message}`);
+		}
+	});
+});// CLEANUP
 
 
 /*
