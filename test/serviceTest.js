@@ -21,7 +21,7 @@ const configOptions = {
 	atomicDocumentName: 'testCounter',
 	auth: {
 		username: 'Administrator',
-		password: 'ckhadmin'
+		password: ''//put your password here
 	},
 	operationTimeout: 20000,
 	onConnectCallback: async (error) => {
