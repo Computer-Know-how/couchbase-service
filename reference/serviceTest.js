@@ -26,6 +26,7 @@ const configOptions = {
 	operationTimeout: 20000,
 	onConnectCallback: async (error) => {
 		if(error) {
+			console.log('Failed to connect to Couchbase. Please check settings and make sure you have an instance.');
 			process.exit(1);
 		} else {
 			console.log('connected to Couchbase default bucket.');

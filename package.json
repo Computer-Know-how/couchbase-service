@@ -4,8 +4,8 @@
   "description": "Couchbase simplified",
   "main": "lib/index.js",
   "scripts": {
-    "localtest": "./node_modules/mocha/bin/mocha --recursive",
-    "test": "./node_modules/mocha/bin/mocha --recursive --reporter=min",
+    "localtest": "./node_modules/mocha/bin/mocha --recursive test/",
+    "test": "./node_modules/mocha/bin/mocha --recursive --reporter=min test/",
     "postversion": "git push && git push --tags"
   },
   "repository": {
